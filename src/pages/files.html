@@ -1,0 +1,6 @@
+<ul class="file-list">
+  <li data-ng-repeat="file in files">
+    <span data-ng-if="!file.isDirectory">{{file.name}}</span>
+    <span data-ng-if="file.isDirectory"><a data-ng-href="/#/files/{{file.path}}">{{file.name}}</a></span>
+  </li>
+</ul>
