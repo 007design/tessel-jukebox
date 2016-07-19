@@ -28,6 +28,7 @@ angular.module('app', ['ngRoute'])
 .service('dataSvc', ['$http', function($http) {
   var scope = this;
   scope.busy = false;
+  scope.playing = false;
 
   function poll() {
     $http.get('/status')
@@ -59,6 +60,20 @@ angular.module('app', ['ngRoute'])
       });
   };
 
+  scope.play = function(file) {
+    if (scope.playing) {
+      $http.get('/stop');
+      scope.playing = false;
+    } else
+      $http.get('/play', {
+        params: {
+          p: file
+        }
+      }).success(function() {
+        scope.playing = file;
+      });
+  };
+
   // scope.refresh = function() {
   //   scope.busy = true;
   //   $http.get('/refresh')
@@ -85,6 +100,10 @@ angular.module('app', ['ngRoute'])
       }, function(d) {
         dataSvc.getDir(d);
       });
+
+      scope.play = function(file) {
+        dataSvc.play(file);
+      };
       // scope.refresh = function() {
       //   dataSvc.refresh();
       // };

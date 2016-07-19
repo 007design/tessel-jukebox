@@ -3,9 +3,10 @@
 // Import the interface to Tessel hardware
 var fs = require('fs');
 var p = require('path');
-var tessel = require('tessel');
 var express = require('express');
 var reader = require('./lib/reader.js');
+var av = require('tessel-av');
+var sound = new av.Player();
 
 var list = [];
 var busy = false;
@@ -35,6 +36,22 @@ app.get('/list', function(req, res) {
 //   });
 // });
 
+app.get('/play', function(req, res) {
+  if (!req.query) return;
+
+  sound.play(req.query.p);
+  res.send({
+    "status": "playing"
+  });
+});
+
+app.get('/stop', function(req, res) {
+  sound.stop();
+  res.send({
+    "status": "stopped"
+  });
+});
+
 app.get('/dir', function(req, res) {
   list = {};
   var path = req.query.d ? req.query.d : '/';
@@ -43,6 +60,9 @@ app.get('/dir', function(req, res) {
   if (!busy) {
     busy = true;
     reader.readdir(path, function(err, files) {
+      if (err)
+        console.log(err);
+
       list = files;
       busy = false;
     });
@@ -60,4 +80,4 @@ app.get('/status', function(req, res) {
 });
 
 app.listen(8080);
-console.log("Server listening on port 8000");
+console.log("Server listening on port 8080");
