@@ -53,7 +53,7 @@ app.get('/stop', function(req, res) {
 });
 
 app.get('/dir', function(req, res) {
-  list = {};
+  list = [];
   var path = req.query.d ? req.query.d : '/';
   console.log('reading dir', path);
 
@@ -70,7 +70,30 @@ app.get('/dir', function(req, res) {
 
   res.send({
     status: 'reading'
-  })
+  });
+});
+
+app.get('/tracks', function(req, res) {
+  list = [];
+  if (!busy)
+    fs.stat('/mnt/sda1/.tessel-db', function(err) {
+      console.log('reading files')
+      if (err) {
+        reader.readfiles('/Users/dbond/Desktop', function(err, tracks) {
+          list = tracks;
+          busy = false;
+        })
+      } else {
+        fs.readFile('/mnt/sda1/.tessel-db', function(err, data) {
+          list = data;
+          busy = false;
+        });
+      }
+    });
+
+  res.send({
+    status: 'reading'
+  });
 });
 
 app.get('/status', function(req, res) {

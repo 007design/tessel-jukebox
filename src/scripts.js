@@ -12,6 +12,10 @@ angular.module('app', ['ngRoute'])
       templateUrl: 'pages/files.html',
       controller: 'FilesCtrl'
     })
+    .when('/db', {
+      templateUrl: 'pages/db.html',
+      controller: 'DbCtrl'
+    })
     .otherwise({
       redirectTo: '/'
     });
@@ -22,6 +26,10 @@ angular.module('app', ['ngRoute'])
 }])
 
 .controller('HomeCtrl', ['$scope', function($scope) {
+
+}])
+
+.controller('DbCtrl', ['$scope', function($scope) {
 
 }])
 
@@ -56,6 +64,13 @@ angular.module('app', ['ngRoute'])
         d: dir
       }
     }).success(function(data) {
+        poll();
+      });
+  };
+
+  scope.getTracks = function() {
+    $http.get('/tracks')
+      .success(function(data) {
         poll();
       });
   };
@@ -107,6 +122,25 @@ angular.module('app', ['ngRoute'])
       // scope.refresh = function() {
       //   dataSvc.refresh();
       // };
+    }
+  };
+}])
+
+.directive('trackList', ['dataSvc', function(dataSvc) {
+  return {
+    restrict: 'C',
+    link: function(scope) {
+      scope.$watch(function() {
+        return dataSvc.fileList;
+      }, function(t) {
+        scope.tracks = t;
+      });
+
+      dataSvc.getTracks();
+
+      scope.play = function(file) {
+        dataSvc.play(file);
+      };
     }
   };
 }]);
