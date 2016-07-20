@@ -79,7 +79,7 @@ app.get('/tracks', function(req, res) {
     fs.stat('/mnt/sda1/.tessel-db', function(err) {
       console.log('reading files')
       if (err) {
-        reader.readfiles('/Users/dbond/Desktop', function(err, tracks) {
+        reader.readfiles('/mnt/sda1', function(err, tracks) {
           list = tracks;
           busy = false;
         })
