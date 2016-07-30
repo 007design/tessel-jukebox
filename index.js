@@ -5,8 +5,9 @@ var fs = require('fs');
 var p = require('path');
 var express = require('express');
 var reader = require('./lib/reader.js');
-var av = require('tessel-av');
-var sound = new av.Player();
+// var av = require('tessel-av');
+var player = require('./lib/player.js');
+// var sound = new av.Player();
 
 var list = [];
 var busy = false;
@@ -39,14 +40,16 @@ app.get('/list', function(req, res) {
 app.get('/play', function(req, res) {
   if (!req.query) return;
 
-  sound.play(req.query.p);
+  player.play({
+    file: req.query.p
+  });
   res.send({
     "status": "playing"
   });
 });
 
 app.get('/stop', function(req, res) {
-  sound.stop();
+  // sound.stop();
   res.send({
     "status": "stopped"
   });
