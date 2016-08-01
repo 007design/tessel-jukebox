@@ -4,6 +4,9 @@
 var fs = require('fs');
 var p = require('path');
 var express = require('express');
+var app = express();
+var http = require('http').Server(app);
+var io = require('socket.io')(http);
 var reader = require('./lib/reader.js');
 var player = require('./lib/player.js');
 
@@ -12,7 +15,6 @@ var busy = false;
 var playing = false;
 var track;
 
-var app = express();
 app.use(express.static(__dirname + '/src'));
 
 app.get('/list', function(req, res) {
@@ -37,6 +39,26 @@ app.get('/list', function(req, res) {
 //   });
 // });
 
+function play(path) {
+  playing = true;
+
+  player.play({
+    file: path
+  }, function() {
+    // Done playing
+    playing = false;
+    io.emit('status', 'stopped')
+  });
+}
+
+io.on('connection', function(socket) {
+  socket.on('play', function(path) {
+    play(path);
+    console.log('emitting status')
+    io.emit('status', 'playing')
+  });
+});
+
 app.get('/play', function(req, res) {
   if (playing)
     player.stop();
@@ -44,14 +66,8 @@ app.get('/play', function(req, res) {
   if (!req.query) return;
 
   track = req.query.p;
-  playing = true;
+  play(track);
 
-  player.play({
-    file: req.query.p
-  }, function() {
-    // Done playing
-    playing = false;
-  });
   res.send({
     "status": "playing"
   });
@@ -67,6 +83,7 @@ app.get('/stop', function(req, res) {
 app.get('/dir', function(req, res) {
   list = [];
   var path = req.query.d ? req.query.d : '/';
+  // path = p.join('/Users/dbond/', path);
   console.log('reading dir', path);
 
   if (!busy) {
@@ -121,5 +138,6 @@ app.get('/status', function(req, res) {
   })
 });
 
-app.listen(8080);
-console.log("Server listening on port 8080");
+http.listen(8080, function() {
+  console.log("Server listening on port 8080");
+});

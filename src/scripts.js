@@ -1,7 +1,7 @@
 /* global angular */
 "use strict";
 
-angular.module('app', ['ngRoute'])
+angular.module('app', ['ngRoute', 'btford.socket-io'])
 .config(['$routeProvider', function($routeProvider) {
   $routeProvider
     .when('/', {
@@ -21,6 +21,10 @@ angular.module('app', ['ngRoute'])
     });
 }])
 
+.factory('socket', function (socketFactory) {
+  return socketFactory();
+})
+
 .controller('FilesCtrl', ['$scope', function($scope) {
 
 }])
@@ -33,10 +37,15 @@ angular.module('app', ['ngRoute'])
 
 }])
 
-.service('dataSvc', ['$http', '$interval', function($http, $interval) {
+.service('dataSvc', ['$http', 'socket', function($http, socket) {
   var scope = this;
   scope.busy = false;
   scope.playing = false;
+
+  socket.on('status', function(status) {
+    console.log('status', status)
+    scope.playing = status === 'playing';
+  });
 
   function poll() {
     $http.get('/status')
@@ -84,17 +93,20 @@ angular.module('app', ['ngRoute'])
   };
 
   scope.play = function(file) {
-    if (scope.playing) {
-      $http.get('/stop');
-      scope.playing = false;
-    } else
-      $http.get('/play', {
-        params: {
-          p: file
-        }
-      }).success(function() {
-        scope.playing = file;
-      });
+    socket.emit('play', file, function() {
+      scope.playing = true;
+    });
+    // if (scope.playing) {
+    //   $http.get('/stop');
+    //   scope.playing = false;
+    // } else
+    //   $http.get('/play', {
+    //     params: {
+    //       p: file
+    //     }
+    //   }).success(function() {
+    //     scope.playing = file;
+    //   });
   };
 
   // scope.refresh = function() {
@@ -116,6 +128,12 @@ angular.module('app', ['ngRoute'])
         return dataSvc.fileList;
       }, function(f) {
         scope.files = f;
+      });
+
+      scope.$watch(function() {
+        return dataSvc.playing;
+      }, function(p) {
+        scope.playing = p;
       });
 
       scope.$watch(function() {
