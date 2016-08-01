@@ -55,16 +55,19 @@ function play(path) {
 }
 
 function stop() {
+  console.log('stopping');
   playing = false;
   player.stop(stream);
 }
 
 function pause() {
+  console.log('pausing');
   playing = false;
   player.pause(stream);
 }
 
 function resume() {
+  console.log('resuming');
   playing = true;
   player.resume(stream);
 }

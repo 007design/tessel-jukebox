@@ -94,9 +94,10 @@ angular.module('app', ['ngRoute', 'btford.socket-io'])
   };
 
   scope.play = function(file) {
+    console.log(scope.track == file, scope.track, file);
     if (scope.playing) {
       scope.playing = false;
-      if (scope.track === file)
+      if (scope.track == file)
         return socket.emit('pause');
       else {
         socket.emit('stop');
@@ -107,9 +108,9 @@ angular.module('app', ['ngRoute', 'btford.socket-io'])
     if (scope.track === file)
       return socket.emit('resume');
 
+    scope.track = file;
     socket.emit('play', file, function() {
       scope.playing = true;
-      scope.track = file;
     });
     //   $http.get('/stop');
     //   scope.playing = false;
