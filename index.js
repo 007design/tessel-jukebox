@@ -5,12 +5,12 @@ var fs = require('fs');
 var p = require('path');
 var express = require('express');
 var reader = require('./lib/reader.js');
-// var av = require('tessel-av');
 var player = require('./lib/player.js');
-// var sound = new av.Player();
 
 var list = [];
 var busy = false;
+var playing = false;
+var track;
 
 var app = express();
 app.use(express.static(__dirname + '/src'));
@@ -38,10 +38,19 @@ app.get('/list', function(req, res) {
 // });
 
 app.get('/play', function(req, res) {
+  if (playing)
+    player.stop();
+
   if (!req.query) return;
+
+  track = req.query.p;
+  playing = true;
 
   player.play({
     file: req.query.p
+  }, function() {
+    // Done playing
+    playing = false;
   });
   res.send({
     "status": "playing"
@@ -49,7 +58,7 @@ app.get('/play', function(req, res) {
 });
 
 app.get('/stop', function(req, res) {
-  // sound.stop();
+  player.stop();
   res.send({
     "status": "stopped"
   });
@@ -96,6 +105,13 @@ app.get('/tracks', function(req, res) {
 
   res.send({
     status: 'reading'
+  });
+});
+
+app.get('/playing', function(req, res) {
+  res.send({
+    'is_playing': playing,
+    'track': track
   });
 });
 

@@ -33,7 +33,7 @@ angular.module('app', ['ngRoute'])
 
 }])
 
-.service('dataSvc', ['$http', function($http) {
+.service('dataSvc', ['$http', '$interval', function($http, $interval) {
   var scope = this;
   scope.busy = false;
   scope.playing = false;
@@ -50,6 +50,14 @@ angular.module('app', ['ngRoute'])
       });
   }
 
+  function getStatus() {
+    $http.get('/playing')
+      .success(function(data) {
+        scope.playing = data.is_playing;
+      });
+  }
+  // $interval(getStatus,1000);
+
   scope.getList = function() {
     $http.get('/list')
       .success(function(data) {
@@ -64,8 +72,8 @@ angular.module('app', ['ngRoute'])
         d: dir
       }
     }).success(function(data) {
-        poll();
-      });
+      poll();
+    });
   };
 
   scope.getTracks = function() {
