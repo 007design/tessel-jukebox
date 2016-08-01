@@ -59,6 +59,16 @@ function stop() {
   player.stop(stream);
 }
 
+function pause() {
+  playing = false;
+  player.pause(stream);
+}
+
+function resume() {
+  playing = true;
+  player.resume(stream);
+}
+
 io.on('connection', function(socket) {
   socket.on('play', function(path) {
     play(path);
@@ -69,6 +79,16 @@ io.on('connection', function(socket) {
   socket.on('stop', function() {
     stop();
     io.emit('status', 'stopped');
+  });
+
+  socket.on('pause', function() {
+    pause();
+    io.emit('status', 'paused');
+  });
+
+  socket.on('resume', function() {
+    resume();
+    io.emit('status', 'playing');
   });
 });
 

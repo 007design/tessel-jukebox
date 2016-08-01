@@ -41,6 +41,7 @@ angular.module('app', ['ngRoute', 'btford.socket-io'])
   var scope = this;
   scope.busy = false;
   scope.playing = false;
+  scope.track;
 
   socket.on('status', function(status) {
     console.log('status', status)
@@ -94,11 +95,21 @@ angular.module('app', ['ngRoute', 'btford.socket-io'])
 
   scope.play = function(file) {
     if (scope.playing) {
-      socket.emit('stop');
+      scope.playing = false;
+      if (scope.track === file)
+        return socket.emit('pause');
+      else {
+        socket.emit('stop');
+        return scope.play(file);
+      }
     }
+
+    if (scope.track === file)
+      return socket.emit('resume');
 
     socket.emit('play', file, function() {
       scope.playing = true;
+      scope.track = file;
     });
     //   $http.get('/stop');
     //   scope.playing = false;
