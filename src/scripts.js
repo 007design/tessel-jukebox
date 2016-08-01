@@ -93,10 +93,13 @@ angular.module('app', ['ngRoute', 'btford.socket-io'])
   };
 
   scope.play = function(file) {
+    if (scope.playing) {
+      socket.emit('stop');
+    }
+
     socket.emit('play', file, function() {
       scope.playing = true;
     });
-    // if (scope.playing) {
     //   $http.get('/stop');
     //   scope.playing = false;
     // } else

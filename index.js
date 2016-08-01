@@ -13,7 +13,7 @@ var player = require('./lib/player.js');
 var list = [];
 var busy = false;
 var playing = false;
-var track;
+var track, stream;
 
 app.use(express.static(__dirname + '/src'));
 
@@ -40,9 +40,12 @@ app.get('/list', function(req, res) {
 // });
 
 function play(path) {
+  if (playing)
+    player.stop(stream);
+  
   playing = true;
 
-  player.play({
+  stream = player.play({
     file: path
   }, function() {
     // Done playing
@@ -51,11 +54,21 @@ function play(path) {
   });
 }
 
+function stop() {
+  playing = false;
+  player.stop(stream);
+}
+
 io.on('connection', function(socket) {
   socket.on('play', function(path) {
     play(path);
     console.log('emitting status')
     io.emit('status', 'playing')
+  });
+
+  socket.on('stop', function() {
+    stop();
+    io.emit('status', 'stopped');
   });
 });
 
