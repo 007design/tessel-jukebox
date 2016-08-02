@@ -1,6 +1,7 @@
 <ul class="track-list">
-	<li data-ng-show="playing">Playing</li>
-	<li data-ng-hide="playing">Stopped</li>
+	<li>{{busy}}</li>
+	<li>{{status}}</li>
+	<li data-ng-click="refresh()">Refresh</li>
 	<li>
 		<span data-ng-click="sort = 'title'">Title</span>
 		<span data-ng-click="sort = 'artist'">Artist</span>

@@ -40,33 +40,29 @@ angular.module('app', ['ngRoute', 'btford.socket-io'])
 .service('dataSvc', ['$http', 'socket', function($http, socket) {
   var scope = this;
   scope.busy = false;
-  scope.playing = false;
-  scope.track;
+  scope.status, scope.track;
 
   socket.on('status', function(status) {
     console.log('status', status)
-    scope.playing = status === 'playing';
+    scope.status = status;
   });
 
-  function poll() {
-    $http.get('/status')
-      .success(function(data) {
-        if (data.status === 'busy')
-          setTimeout(poll,1000);
-        else {
-          scope.busy = false;
-          scope.getList();
-        }
-      });
-  }
+  socket.on('refresh', function(status) {
+    if (status === 'done')
+      scope.getList();
+  });
 
-  function getStatus() {
-    $http.get('/playing')
-      .success(function(data) {
-        scope.playing = data.is_playing;
-      });
-  }
-  // $interval(getStatus,1000);
+  // function poll() {
+  //   $http.get('/status')
+  //     .success(function(data) {
+  //       if (data.status === 'busy')
+  //         setTimeout(poll,1000);
+  //       else {
+  //         scope.busy = false;
+  //         scope.getList();
+  //       }
+  //     });
+  // }
 
   scope.getList = function() {
     $http.get('/list')
@@ -82,21 +78,20 @@ angular.module('app', ['ngRoute', 'btford.socket-io'])
         d: dir
       }
     }).success(function(data) {
-      poll();
+      scope.busy = true;
     });
   };
 
-  scope.getTracks = function() {
-    $http.get('/tracks')
-      .success(function(data) {
-        poll();
-      });
-  };
+  // scope.getTracks = function() {
+  //   scope.busy = true;
+  //   $http.get('/tracks')
+  //     .success(function(data) {
+  //       poll();
+  //     });
+  // };
 
   scope.play = function(file) {
-    console.log(scope.track == file, scope.track, file);
     if (scope.playing) {
-      scope.playing = false;
       if (scope.track == file)
         return socket.emit('pause');
       else {
@@ -109,28 +104,13 @@ angular.module('app', ['ngRoute', 'btford.socket-io'])
       return socket.emit('resume');
 
     scope.track = file;
-    socket.emit('play', file, function() {
-      scope.playing = true;
-    });
-    //   $http.get('/stop');
-    //   scope.playing = false;
-    // } else
-    //   $http.get('/play', {
-    //     params: {
-    //       p: file
-    //     }
-    //   }).success(function() {
-    //     scope.playing = file;
-    //   });
+    socket.emit('play', file);
   };
 
-  // scope.refresh = function() {
-  //   scope.busy = true;
-  //   $http.get('/refresh')
-  //     .success(function(data) {
-  //       poll();
-  //     });
-  // };
+  scope.refresh = function() {
+    scope.busy = true;
+    socket.emit('refresh')
+  };
 
   return scope;
 }])
@@ -146,9 +126,9 @@ angular.module('app', ['ngRoute', 'btford.socket-io'])
       });
 
       scope.$watch(function() {
-        return dataSvc.playing;
-      }, function(p) {
-        scope.playing = p;
+        return dataSvc.status;
+      }, function(s) {
+        scope.status = s;
       });
 
       scope.$watch(function() {
@@ -160,9 +140,6 @@ angular.module('app', ['ngRoute', 'btford.socket-io'])
       scope.play = function(file) {
         dataSvc.play(file);
       };
-      // scope.refresh = function() {
-      //   dataSvc.refresh();
-      // };
     }
   };
 }])
@@ -177,10 +154,26 @@ angular.module('app', ['ngRoute', 'btford.socket-io'])
         scope.tracks = t;
       });
 
-      dataSvc.getTracks();
+      scope.$watch(function() {
+        return dataSvc.status;
+      }, function(s) {
+        scope.status = s;
+      });
+
+      scope.$watch(function() {
+        return dataSvc.busy;
+      }, function(b) {
+        scope.busy = b;
+      });
+
+      dataSvc.getList();
 
       scope.play = function(file) {
         dataSvc.play(file);
+      };
+
+      scope.refresh = function() {
+        dataSvc.refresh();
       };
     }
   };
