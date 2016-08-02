@@ -19,6 +19,7 @@ tessel.led[2].off();
 app.use(express.static(__dirname + '/src'));
 
 app.get('/list', function(req, res) {
+  console.log('sending list', list);
   res.send(list);
 });
 
@@ -51,10 +52,12 @@ function resume() {
 
 function refresh() {
   reader.readfiles('/mnt/sda1', function(err, tracks) {
-    list = tracks;
+    if (err)
+      console.log(err);
+    // list = tracks;
     busy = false;
-    tessel.led[2].off();
     fs.writeFile('/mnt/sda1/.tessel-db', JSON.stringify(tracks));
+    tessel.led[2].off();
     io.emit('refresh', 'done');
   })
 }
@@ -143,15 +146,18 @@ app.get('/dir', function(req, res) {
 app.get('/tracks', function(req, res) {
   if (!busy) {
     list = [];
-    busy = true;
     tessel.led[2].on();
     fs.stat('/mnt/sda1/.tessel-db', function(err) {
       console.log('reading files')
       if (err) {
+        console.log('refreshing list');
         refresh();
       } else {
-        fs.readFile('/mnt/sda1/.tessel-db', function(err, data) {
-          list = data;
+        busy = true;
+        fs.readFile('/mnt/sda1/.tessel-db', function(_err, data) {
+          if (err)
+            console.log(_err);
+          list = JSON.parse(data.toString());
           busy = false;
           tessel.led[2].off();
           io.emit('refresh', 'done');

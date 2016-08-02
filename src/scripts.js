@@ -68,6 +68,7 @@ angular.module('app', ['ngRoute', 'btford.socket-io'])
     $http.get('/list')
       .success(function(data) {
         scope.fileList = data;
+        scope.busy = false;
       });
   };
 
@@ -82,13 +83,12 @@ angular.module('app', ['ngRoute', 'btford.socket-io'])
     });
   };
 
-  // scope.getTracks = function() {
-  //   scope.busy = true;
-  //   $http.get('/tracks')
-  //     .success(function(data) {
-  //       poll();
-  //     });
-  // };
+  scope.getTracks = function() {
+    $http.get('/tracks')
+      .success(function(data) {
+        scope.busy = true;
+      });
+  };
 
   scope.play = function(file) {
     if (scope.playing) {
@@ -166,7 +166,7 @@ angular.module('app', ['ngRoute', 'btford.socket-io'])
         scope.busy = b;
       });
 
-      dataSvc.getList();
+      dataSvc.getTracks();
 
       scope.play = function(file) {
         dataSvc.play(file);
